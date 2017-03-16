@@ -1,6 +1,6 @@
-DEVICE          = stm32f103c8t6
+DEVICE          = stm32f303cct6
 OPENCM3_DIR     = libopencm3
-BINARY		:= sbus
+BINARY		:= sbus-f3-new
 OBJS            += $(BINARY).o
 
 CFLAGS          += -Os -ggdb3 -std=gnu99 -O3 -Wall -I. -Werror

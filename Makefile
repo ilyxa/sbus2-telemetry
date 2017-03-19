@@ -1,6 +1,6 @@
 DEVICE          = stm32f303cct6
 OPENCM3_DIR     = libopencm3
-BINARY		:= sbus-f3-new
+BINARY		:= sbus-f3-u1
 OBJS            += $(BINARY).o
 
 CFLAGS          += -Os -ggdb3 -std=gnu99 -O3 -Wall -I. -Werror
@@ -16,10 +16,12 @@ include $(OPENCM3_DIR)/mk/gcc-config.mk
 all: $(BINARY).elf $(BINARY).hex
 
 clean:
-	$(Q)$(RM) $(BINARY).d $(BINARY).hex $(BINARY).elf $(DEVICE).ld generated.$(DEVICE).ld
-
+	$(Q)$(RM) $(BINARY).d $(BINARY).o $(BINARY).hex $(BINARY).elf $(DEVICE).ld generated.$(DEVICE).ld
+bin:
+	arm-none-eabi-objcopy -O binary $(BINARY).elf $(BINARY).bin
+	
 flash: $(BINARY).elf
-	st-util -v0 2>&1 >/dev/null & echo -e "\ntarget remote localhost:4242\nfile sbus.elf\nload\nquit\n" | arm-none-eabi-gdb --quiet | wait `pgrep arm-none-eabi-gdb`
+	st-util -v0 2>&1 >/dev/null & echo -e "\ntarget remote localhost:4242\nfile $(BINARY).elf\nload\nquit\n" | arm-none-eabi-gdb --quiet | wait `pgrep arm-none-eabi-gdb`
 
 include $(OPENCM3_DIR)/mk/genlink-rules.mk
 include $(OPENCM3_DIR)/mk/gcc-rules.mk

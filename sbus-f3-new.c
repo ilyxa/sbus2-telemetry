@@ -4,8 +4,10 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
 
-//~ #define CONSOLE_PORT 	USART1
+//~ #include sbus-f3-new.h
+
 #define SBUS_PORT 		USART1
+#define CONSOLE_PORT 	USART3
 #define LED0 GPIO3 // PB3
 #define led0_toggle 	gpio_toggle(GPIOB, LED0);
 #define delay800  for (int i = 0; i < 800000; i++) __asm__("nop");
@@ -79,24 +81,25 @@ void setup_usart_sbus(void)
 }
 void setup_timer(void)
 {
-	rcc_periph_clock_enable(RCC_TIM2);
-	rcc_periph_clock_enable(RCC_TIM3);
 	rcc_periph_reset_pulse(RST_TIM2);
+	rcc_periph_clock_enable(RCC_TIM2);
+	TIM2_PSC = rcc_apb1_frequency / 500000; /* 1usec per count */
+	TIM2_CR1 |= TIM_CR1_URS; /* setting EGR_UG won't trigger ISR */
+	TIM2_EGR |= TIM_EGR_UG; /* force load PSC */
+
 	rcc_periph_reset_pulse(RST_TIM3);
+	rcc_periph_clock_enable(RCC_TIM3);
+
 	nvic_set_priority(NVIC_TIM3_IRQ, 1 << 4);
 	nvic_enable_irq(NVIC_TIM3_IRQ);
 
-	//~ TIM2_PSC = rcc_apb1_frequency / 500000 - 1; /* 1usec per count */
-	TIM3_PSC = rcc_apb1_frequency / 500000 - 1; /* 1usec per count */
-	TIM2_PSC = 63;
+	TIM3_PSC = rcc_apb1_frequency / 500000; /* 1usec per count */
 	TIM3_ARR = 660; /* 3 bytes * 120us per byte  = 360 us for data
 			   an 300us gap between slots */
 	TIM3_DIER |= TIM_DIER_UIE;
 
-	TIM2_CR1 |= TIM_CR1_URS; /* setting EGR_UG won't trigger ISR */
 	TIM3_CR1 |= TIM_CR1_URS;
 	// stm32f3 problem is here need more check
-	TIM2_EGR |= TIM_EGR_UG; /* force load PSC */
 	TIM3_EGR |= TIM_EGR_UG;
 }
 

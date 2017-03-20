@@ -30,7 +30,6 @@ void setup_timer(void)
 	timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT_MUL_2,
 		TIM_CR1_CMS_EDGE, TIM_CR1_DIR_DOWN);
 	timer_set_prescaler(TIM2, rcc_apb1_frequency / 500000);
-	printf("rcc_apb1_frequency %lu\r\n", rcc_apb1_frequency);
 	//~ timer_set_prescaler(TIM2, 1);
 	timer_set_period(TIM2, 1);
 	timer_enable_counter(TIM2);
@@ -45,21 +44,18 @@ void tim2_us(unsigned delay_us)
 int main(void)
 {
     initialise_monitor_handles();
-    //~ printf("hello world!\r\n");
-	printf("Init...\r\n");
-	printf("Clock setup...\r\n");
-	setup_clock();
-	printf("setup gpio\r\n");
-	setup_gpio();
-	printf("setup timer\r\n");
-	setup_timer();
-	tim2_us(1000);
+    //~ printf("hello world!\n");
+	//~ printf("Init...");
+	//~ printf("Clock setup...");
+	//~ setup_clock();
+	//~ setup_gpio();
+	//~ setup_timer();
+	//~ tim2_us(1000);
 	//~ while (timer_get_counter(TIM2) != 0);
 	//~ while (!timer_get_flag(TIM2, TIM_SR_UIF));
 	//~ led0_toggle;
 	led0_toggle;
-	led0_toggle;
-	
-	for(;;);
+	    fprintf(stdout, "Stdout output: \r\n");
 
+for(;;);
 }

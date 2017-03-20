@@ -1,12 +1,17 @@
 DEVICE          = stm32f303cct6
 OPENCM3_DIR     = libopencm3
-BINARY		:= sbus-f3-u1
+BINARY			:= sbus-f3-u1
 OBJS            += $(BINARY).o
 
 CFLAGS          += -Os -ggdb3 -std=gnu99 -O3 -Wall -I. -Werror
 CPPFLAGS        += -MD
 LDFLAGS         += -static -nostartfiles
-LDLIBS          += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
+LDLIBS          += -Wl,--start-group -lc -lgcc -Wl,--end-group
+
+#CFLAGS	+= -specs=nosys.specs -specs=nano.specs -specs=rdimon.specs -lc -lrdimon
+LDFLAGS	+= -specs=nosys.specs -specs=nano.specs -specs=rdimon.specs -lrdimon
+#LDLIBS	+= -specs=nosys.specs -specs=nano.specs -specs=rdimon.specs -lc -lrdimon
+
 
 include $(OPENCM3_DIR)/mk/genlink-config.mk
 include $(OPENCM3_DIR)/mk/gcc-config.mk

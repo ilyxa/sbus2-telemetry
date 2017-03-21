@@ -1,6 +1,5 @@
 DEVICE          = stm32f303cct6
 OPENCM3_DIR     = libopencm3
-
 BINARY			:= sbus-f3-new
 OBJS            += $(BINARY).o
 
@@ -14,7 +13,6 @@ CFLAGS		+= -ffunction-sections -fdata-sections
 LDFLAGS		+= --static -nostartfiles -Wl,-Map=$(*).map -L$(OPENCM3_DIR)/lib
 LDFLAGS		+= --specs=nano.specs
 LDFLAGS 	+= -Wl,-gc-sections
-#~ LDLIBS		+= -l$(OPENCM3_LIBNAME)
 LDLIBS		+= -lc -lgcc
 
 
@@ -33,11 +31,11 @@ flash: $(BINARY).elf
 
 ifeq ($(ENABLE_SEMIHOSTING),1)
   $(info Enabled semihosting)
-  LDFLAGS += --specs=rdimon.specs
-  LDLIBS += -lrdimon
-  CFLAGS += -DSEMIHOSTING=1
+  LDFLAGS	+= --specs=rdimon.specs
+  LDLIBS	+= -lrdimon
+  CFLAGS	+= -DSEMIHOSTING=1
 else
-  LDLIBS += -lnosys
+  LDLIBS	+= -lnosys
 endif
 
 include $(OPENCM3_DIR)/mk/genlink-rules.mk

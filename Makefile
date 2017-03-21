@@ -12,6 +12,7 @@ CFLAGS		+= -std=gnu99 -O3 -Wall -I. -Werror
 CFLAGS		+= -ggdb3
 CFLAGS		+= -ffunction-sections -fdata-sections
 LDFLAGS		+= --static -nostartfiles -Wl,-Map=$(*).map -L$(OPENCM3_DIR)/lib
+LDFLAGS		+= --specs=nano.specs
 LDFLAGS 	+= -Wl,-gc-sections
 #~ LDLIBS		+= -l$(OPENCM3_LIBNAME)
 LDLIBS		+= -lc -lgcc

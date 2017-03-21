@@ -3,8 +3,10 @@
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
+#include "sbus-f3-new.h"
+//#include <stdio.h>
 
-//~ #include sbus-f3-new.h
+// extern void initialise_monitor_handles(void);
 
 #define SBUS_PORT 		USART1
 #define CONSOLE_PORT 	USART3
@@ -66,12 +68,13 @@ void setup_usart_sbus(void)
 {
 	rcc_periph_clock_enable(RCC_GPIOA);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10);
-	//~ gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
+
 	rcc_periph_clock_enable(RCC_USART1);
 	usart_set_baudrate(SBUS_PORT, 100000);
 	usart_set_databits(SBUS_PORT, 8);
 	usart_set_stopbits(SBUS_PORT, USART_STOPBITS_2);
-	usart_set_mode(SBUS_PORT, USART_MODE_TX_RX);
+	usart_set_mode(SBUS_PORT, USART_MODE_RX);
 	usart_set_parity(SBUS_PORT, USART_PARITY_EVEN);
 	usart_set_flow_control(SBUS_PORT, USART_FLOWCONTROL_NONE);
 	//~ usart_enable_data_inversion(SBUS_PORT);
@@ -105,7 +108,7 @@ void setup_timer(void)
 
 void sbus_send_slot(int n)
 {
-	//~ prototype 
+	//~ prototype
 	if (sbus_slot_data[n][0] == 0) return;
 	//~ redefine gpio slot while sending data here
 	for (int i = 0; i < 3; i++) {
@@ -127,34 +130,33 @@ void tim3_isr()
 
 void sbus_tick(void)
 {
-	uint32_t isr;
 	uint8_t c;
 	unsigned char buf[25] = {0};
 
-	do buf[0] = usart_recv_blocking(USART1);
+	do buf[0] = usart_recv(SBUS_PORT);
 	while (buf[0] != 0x0f);
+
 	/* channel data is 25 bytes long,
 	   1 start bit + 8 data bit + parity bit + 2 stop bit
 	   gives 120 us per byte and 3000us per 25 bytes */
 	tim2_us(3000 - 120 + 50); /* 24 bytes + jitter */
 	for (int i = 1; i < 25; i++) {
-		isr = USART1_ISR;
-		
-		while ((isr & (USART_SR_RXNE | USART_SR_ORE |
+
+		while ((USART1_ISR & (USART_SR_RXNE | USART_SR_ORE |
 				     USART_SR_NE | USART_SR_FE |
 				     USART_SR_PE)) == 0 &&
 		       (TIM2_SR & TIM_SR_UIF) == 0);
-		
-		isr = USART1_ISR;
-		
-		if ((isr & (USART_SR_ORE | USART_SR_NE |
+
+
+		if ((USART1_ISR & (USART_SR_ORE | USART_SR_NE |
 				   USART_SR_FE | USART_SR_PE)) ||
-				(TIM2_SR & TIM_SR_UIF)) 
+				(TIM2_SR & TIM_SR_UIF))
 			return;
 		c = USART1_RDR;
 		buf[i] = c;
+		//printf("%i", buf[i]);
 		led0_toggle;
-		//~ buf[i] = usart_recv_blocking(USART1);
+		//~ buf[i] = usart_recv_blocking(SBUS_PORT);
 		usart_send_blocking(SBUS_PORT, buf[24]);
 	}
 	switch (buf[24]) {
@@ -180,11 +182,12 @@ void sbus_tick(void)
 
 int main()
 {
+	//initialise_monitor_handles();
 	setup_clock();
 	setup_timer();
 	setup_gpio();
 	setup_usart_sbus();
-	tim2_us(1);
+	//~ tim2_us(1);
 	for (;;) {
 		sbus_tick(); // NOOOP
 		led0_toggle;

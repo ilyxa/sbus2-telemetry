@@ -54,12 +54,12 @@ int main(void)
 	printf("setup timer\r\n");
 	setup_timer();
 	tim2_us(1000);
+	do 
+		printf("counter %lu\r\n", timer_get_counter(TIM2));
 	//~ while (timer_get_counter(TIM2) != 0);
-	//~ while (!timer_get_flag(TIM2, TIM_SR_UIF));
+	while (!timer_get_flag(TIM2, TIM_SR_UIF));
 	//~ led0_toggle;
-	led0_toggle;
-	led0_toggle;
-	
-	for(;;);
-
+	printf("Done.\r\n");
+	//~ for(;;);
+	return 0;
 }

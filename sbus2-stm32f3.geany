@@ -28,10 +28,8 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=2
-FILE_NAME_0=0;C;0;EUTF-8;1;1;0;%2Fstorarray%2Fsync%2Fsource%2FMCU%2Fsbus2%2Fsbus-f3-new.c;0;4
-FILE_NAME_1=948;Make;0;EUTF-8;1;1;0;%2Fstorarray%2Fsync%2Fsource%2FMCU%2Fjitel%2Fopencm3.mk;0;4
-FILE_NAME_2=1126;Make;0;EUTF-8;1;1;0;%2Fstorarray%2Fsync%2Fsource%2FMCU%2Fsbus2%2FMakefile;0;4
+current_page=0
+FILE_NAME_0=5422;C;0;EUTF-8;1;1;0;%2Fstorarray%2Fsync%2Fsource%2FMCU%2Fsbus2%2Fsbus-telemetry.c;0;4
 
 [VTE]
 last_dir=/home/ilyxa
@@ -48,3 +46,11 @@ ignored_dirs_patterns=.*;CVS;
 ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;
 generate_tag_prefs=0
 external_dirs=
+
+[debugger]
+target=/storarray/sync/source/MCU/sbus2/sbus-telemetry.elf
+debugger=GDB
+arguments=
+envvar_count=0
+watches_count=0
+breaks_count=0

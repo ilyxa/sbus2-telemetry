@@ -1,6 +1,6 @@
 DEVICE          = stm32f303cct6
 OPENCM3_DIR     = libopencm3
-BINARY			:= sbus-f3-new
+BINARY			:= sbus-telemetry
 OBJS            += $(BINARY).o
 
 include $(OPENCM3_DIR)/mk/gcc-config.mk

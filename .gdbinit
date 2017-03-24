@@ -4,4 +4,6 @@ monitor arm semihosting enable
 monitor init
 monitor reset init
 monitor halt
+file sbus-telemetry.elf
 load
+cont

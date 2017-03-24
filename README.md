@@ -1,6 +1,8 @@
 # sbus2-telemetry
 Futaba Sbus2 telemetry tryout.
 
+Code cleanup wanted, also need to write down right connection scheme.
+
 This is very dirty prototype fork from original project https://github.com/delamonpansie/jitel for STM32F3 MCU.
 # Setup (Arch Linux)
 community/stlink

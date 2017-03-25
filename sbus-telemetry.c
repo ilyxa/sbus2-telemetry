@@ -52,16 +52,18 @@ void init_usart(void)
 	// sbus
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_USART1);
-	rcc_periph_clock_enable(RCC_GPIOB);
-	rcc_periph_clock_enable(RCC_USART3);
 
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO9);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO9); // GPIO_OTYPE_PP tx ???
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO9 | GPIO10); // GPIO_OTYPE_PP tx ???
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
+	//~ gpio_set(GPIOA, GPIO9 | GPIO10);
+
+	//~ gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10);
+	//~ gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO10); // GPIO_OTYPE_PP tx ???
 
 	//~ gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10);
 	//~ gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO10); // GPIO_OTYPE_OD rx  ???
 	//~ gpio_set(GPIOA, GPIO10);
-	//~ gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
 	//~ gpio_set_af(GPIOA, GPIO_AF7, GPIO9);
 
 	usart_set_mode(SBUS_PORT, USART_MODE_TX_RX);
@@ -70,9 +72,10 @@ void init_usart(void)
 	usart_set_parity(SBUS_PORT, USART_PARITY_EVEN);
 	usart_set_stopbits(SBUS_PORT, USART_STOPBITS_2);
 	usart_set_flow_control(SBUS_PORT, USART_FLOWCONTROL_NONE);
+	usart_enable_halfduplex(SBUS_PORT);
 	usart_enable_rx_inversion(SBUS_PORT);
 	usart_enable_tx_inversion(SBUS_PORT);
-	usart_enable_halfduplex(SBUS_PORT);
+	//~ usart_enable_data_inversion(SBUS_PORT);
 
 	/**
 	 * enable Overrun disable while debug?
@@ -81,12 +84,20 @@ void init_usart(void)
 	USART_CR3(SBUS_PORT) |= USART_CR3_OVRDIS;
 	// halfduplex flag
 	//~ USART_CR3(SBUS_PORT) |= USART_CR3_HDSEL;
+	//~ USART_CR2(SBUS_PORT) &= ~USART_CR2_CLKEN;
+	//~ USART_CR2(SBUS_PORT) &= ~USART_CR2_LINEN;
+	//~ USART_CR3(SBUS_PORT) &= ~USART_CR3_SCEN;
+	//~ USART_CR3(SBUS_PORT) &= ~USART_CR3_IREN;
+
 
 	// disable
 	//~ USART_CR3(USART1) &= ~USART_CR3_OVRDIS;
 
 	usart_enable(SBUS_PORT);
 
+	// console port USART3
+	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_USART3);
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10 | GPIO11);
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO10 | GPIO11); // GPIO_OTYPE_OD rx GPIO_OTYPE_PP tx ???
 	gpio_set_af(GPIOB, GPIO_AF7, GPIO10 | GPIO11);
@@ -177,12 +188,17 @@ static void sbus_slot(int n, unsigned short val)
 	sbus_slot_data[n][1] = val >> 8;
 }
 
+static uint16_t swap(uint16_t a)
+{
+	return (a << 8) | (a >> 8);
+}
+
 static void sbus_update_slot_data()
 {
 	int rpm=100;
 	/* SBS-01RM */
 	rpm++;
-	sbus_slot(4, rpm/6); //rpm sensor
+	sbus_slot(4, swap(rpm/6)); //rpm sensor
 	/* SBS-01V */
 	sbus_slot(5, 0x1000);
 	sbus_slot(6, 0xF0);
@@ -210,17 +226,19 @@ void sbus_tick(void)
 	 * 1 start bit + 8 data bit + parity bit + 2 stop bit
 	 * gives 120 us per byte and 3000us per 25 bytes
 	 */
-	//~ tim2_us(3000 - 120 + 50); // 24 bytes + jitter
+	tim2_us(3000 - 120 + 50); // 24 bytes + jitter
 	for (int i = 1; i < 25; i++) {
 		//~ while ((USART_ISR(SBUS_PORT) & (USART_SR_RXNE | USART_SR_ORE |
 				     //~ USART_SR_NE | USART_SR_FE |
 				     //~ USART_SR_PE)) == 0 &&
-		       //~ (TIM2_SR & TIM_SR_UIF) == 0);
+
+		//~ while ((USART_ISR(SBUS_PORT) & USART_ISR_RXNE) == 0 &&
+			//~ (TIM2_SR & TIM_SR_UIF) == 0);
+
+		while ((TIM2_SR & TIM_SR_UIF) == 0);
 
 		//~ if ((USART_ISR(SBUS_PORT) & (USART_SR_ORE | USART_SR_NE |
 				  //~ USART_SR_FE | USART_SR_PE)) ||
-		    //~ (TIM2_SR & TIM_SR_UIF))
-			//~ return;
 		buf[i] = usart_recv_blocking(SBUS_PORT);
 	}
 
@@ -238,8 +256,8 @@ void sbus_tick(void)
 
 	tim2_us(2000);  /* telemety is 2ms after end of channel data */
 	sbus_update_slot_data(); /* calulate slot values while waiting */
-
 	while ((TIM2_SR & TIM_SR_UIF) == 0);
+
 	sbus_slot_index = 0;
 	TIM3_CNT = 0;
 	TIM3_CR1 |= TIM_CR1_CEN; /* start slot timer */
@@ -257,7 +275,12 @@ int main(void)
 	init_gpio();
 	init_usart();
 	init_timer();
-	//~ usart_send_blocking(CONSOLE_PORT,255);
+	//~ usart_send_blocking(SBUS_PORT,255);
+	usart_send_blocking(CONSOLE_PORT,255);
 	//~ for(;;) 	usart_send_blocking(CONSOLE_PORT,18);
-	for (;;) sbus_tick();
+	for (;;) {
+		sbus_tick();
+		//~ usart_send_blocking(CONSOLE_PORT,255);
+	}
+
 }

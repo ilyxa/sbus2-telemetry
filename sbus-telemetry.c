@@ -1,5 +1,18 @@
+/* sbus-telemetry.c
+ * ver 0.1
+ *
+ * SBus2 telemetry quick and dirty prototype
+ *
+ * Based on jitel project (https://github.com/delamonpansie/jitel)
+ * Important links:
+ * - http://sbustelemetrysensors.blogspot.ru/
+ * - https://sites.google.com/site/sbus2diy/home (russian)
+ */
+
 /**
- * SPRACINGF3 Pinouts
+ * Based on SPRACINGF3 board.
+ *
+ * Pinouts:
  *
  * OUTPUTS 1-8:
  * PWM1 					-	PA6
@@ -28,6 +41,10 @@
  *
  * VBAT_ADC_PIN				-	PA4
  * LED						-	PB3
+ *
+ */
+
+/**
  *
  */
 

@@ -1,4 +1,4 @@
-#First of all
+# First of all
 Many thanks to original project maintainer, https://github.com/delamonpansie/jitel was very nice as start point, also code was partialy copypasted from this project.
 
 # sbus2-telemetry

@@ -1,5 +1,10 @@
 # First of all
 Many thanks to original project maintainer, https://github.com/delamonpansie/jitel was very nice as start point, also code was partialy copypasted from this project.
+A HUGE pieces of infos is here:
+
+http://sbustelemetrysensors.blogspot.ru/
+
+https://sites.google.com/site/sbus2diy/home
 
 # sbus2-telemetry
 Futaba Sbus2 telemetry tryout.

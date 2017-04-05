@@ -17,9 +17,10 @@
 #include <stdio.h>
 #endif
 
-//~ static int rpm = 360;
+static int rpm = 360;
 
 void _sbus_telemetry_c(void) {}
+void tim2_us(unsigned delay);
 static unsigned char sbus_slot_data[31][3];
 
 /**
@@ -60,6 +61,10 @@ void init_gpio(void)
 	rcc_periph_clock_enable(RCC_GPIOB);
 	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED0);
 	gpio_set(GPIOB, LED0);
+	// PA0 IO2 pin 3
+	rcc_periph_clock_enable(RCC_GPIOB);
+	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5);
+	gpio_clear(GPIOB, GPIO5);
 }
 
 void init_usart(void)
@@ -79,9 +84,9 @@ void init_usart(void)
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_USART1);
 
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO9);  // GPIO_OTYPE_PP tx
-	gpio_set_af(GPIOA, GPIO_AF7, GPIO9);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO9 | GPIO10);  // GPIO_OTYPE_PP tx
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
 
 	//~ gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO10);
 	//~ gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO10);
@@ -89,7 +94,7 @@ void init_usart(void)
 
 	usart_set_mode(SBUS_PORT, USART_MODE_TX_RX);
 	usart_set_baudrate(SBUS_PORT, 100000);
-	usart_set_databits(SBUS_PORT, 8);
+	usart_set_databits(SBUS_PORT, 9);
 	usart_set_parity(SBUS_PORT, USART_PARITY_EVEN);
 	usart_set_stopbits(SBUS_PORT, USART_STOPBITS_2);
 	usart_set_flow_control(SBUS_PORT, USART_FLOWCONTROL_NONE);
@@ -114,7 +119,6 @@ void init_usart(void)
 	//~ USART_CR3(USART1) &= ~USART_CR3_OVRDIS;
 
 	usart_enable(SBUS_PORT);
-
 	// console port USART3
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_USART3);
@@ -132,12 +136,24 @@ void init_usart(void)
 
 void sbus_send_slot(int n)
 {
-	if (sbus_slot_data[n][0] == 0) return;
+	if (sbus_slot_data[n][0] == 0) {
+		return;
+	}
+	//~ tim2_us(100);
+	//~ tim2_us(5);
+	//~ gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, GPIO9 | GPIO10);  // GPIO_OTYPE_PP tx
+	//~ gpio_set(GPIOB, GPIO5);
 
 	for (int i = 0; i < 3; i++) {
+	//~ gpio_set(GPIOB, GPIO5);
+
 		usart_send_blocking(SBUS_PORT, sbus_slot_data[n][i]);
-		//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_data[n][i]);
+		usart_send_blocking(CONSOLE_PORT, sbus_slot_data[n][i]);
 	}
+	//~ gpio_clear(GPIOB, GPIO5);
+	//~ gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO9 | GPIO10);  // GPIO_OTYPE_PP tx
+
+
 }
 
 
@@ -200,27 +216,38 @@ static void sbus_slot(int n, unsigned short val)
 	sbus_slot_data[n][0] = sbus_slot_id[n];
 	sbus_slot_data[n][2] = val & 0xff;
 	sbus_slot_data[n][1] = val >> 8;
+
+	/*
+	 * 03 = 03
+	 * 13 = 93
+	 */
+
+	//~ sbus_slot_data[n][0] = 0x83;
+	//~ sbus_slot_data[n][2] = 0x83;
+	//~ sbus_slot_data[n][1] = 0x81;
+
+
 	//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_data[n][0]);
 	//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_data[n][1]);
 	//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_data[n][2]);
 
 }
 
-//~ static uint16_t swap(uint16_t a)
-//~ {
-	//~ return (a << 8) | (a >> 8);
-//~ }
+static uint16_t swap(uint16_t a)
+{
+	return (a << 8) | (a >> 8);
+}
 
 static void sbus_update_slot_data()
 {
 	//~ /* SBS-01RM */
-	//~ rpm++;
-	//~ sbus_slot(4, swap(rpm/6)); //rpm sensor
-	//~ /* SBS-01V */
-	//~ sbus_slot(5, 0x1000);
-	//~ sbus_slot(6, 0xF0);
+	rpm++;
+	sbus_slot(4, swap(rpm/6)); //rpm sensor
+	/* SBS-01V */
+	sbus_slot(5, 0x1000);
+	sbus_slot(6, 0xF0);
 	// temp
-	sbus_slot(1, 0x8180);
+	sbus_slot(1, 0x8282	);
 }
 
 
@@ -284,9 +311,10 @@ void sbus_tick(void)
 	TIM3_CR1 |= TIM_CR1_CEN; /* start slot timer */
 
 			//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_base);
-			usart_send_blocking(CONSOLE_PORT, sbus_slot_index);
+			//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_index);
 
 	sbus_send_slot(sbus_slot_base + sbus_slot_index);
+	//~ usart_send_blocking(CONSOLE_PORT, sbus_slot_index);
 	while (sbus_slot_index != 7); /* wait till all slots sent */
 }
 

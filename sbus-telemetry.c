@@ -1,3 +1,36 @@
+/**
+ * SPRACINGF3 Pinouts
+ *
+ * OUTPUTS 1-8:
+ * PWM1 					-	PA6
+ * PWM2 					-	PA7
+ * PWM3						-	PA11
+ * PWM4						-	PA12
+ * PWM5						-	PB8
+ * PWM6						-	PB9
+ * PWM7						-	PA2
+ * PWM8						-	PA3
+ *
+ * IO_1
+ * RC_CH1					-	PA0
+ * RC_CH2 					-	PA1
+ * RC_CH5 					-	PB4
+ * RC_CH6 					-	PB5
+ * LED_STRIP				-	PA8
+ *
+ * IO_2
+ * CURRENT_METER_ADC_PIN	-	PA5
+ * RSSI_ADC_PIN				-	PB2
+ * RC_CH3					-	PB11
+ * RC_CH4					-	PB10
+ * RC_CH7					-	PB0
+ * RC_CH8					-	PB1
+ *
+ * VBAT_ADC_PIN				-	PA4
+ * LED						-	PB3
+ *
+ */
+
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/timer.h>

@@ -1,3 +1,5 @@
+#First of all. Many thanks to original project maintainer https://github.com/delamonpansie/jitel
+
 # sbus2-telemetry
 Futaba Sbus2 telemetry tryout.
 

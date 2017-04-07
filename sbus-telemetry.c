@@ -60,13 +60,10 @@
  *	63h	01100011	Slot6	73h	01110011	Slot14	6Bh	01101011	Slot22	7Bh	01111011	Slot30
  *	E3h	11100011	Slot7	F3h	11110011	Slot15	EBh	11101011	Slot23	FBh	11111011	Slot31
  */
-
 #include "sbus-telemetry.h"
 
-
-
 static int measure_rpm = 360;
-static int measure_temp = 0x8282;
+//~ static int measure_temp = 0x8282;
 
 static unsigned char sbus_slot_data[31][3];
 const char sbus_slot_id[] = {
@@ -92,15 +89,6 @@ void sbus_send_slot(int n)
 }
 
 
-void tim3_isr()
-{
-	if (++sbus_slot_index == 7)
-		TIM3_CR1 &= ~TIM_CR1_CEN;
-	sbus_send_slot(sbus_slot_base + sbus_slot_index);
-	TIM3_SR &= ~TIM_SR_UIF;
-}
-
-
 static void sbus_slot(int n, unsigned short val)
 {
 	/**
@@ -119,13 +107,21 @@ static void sbus_slot(int n, unsigned short val)
 static void sbus_update_slot_data()
 {
 	//~ /* SBS-01RM */
-	rpm++;
-	sbus_slot(4, swap(rpm/6)); //rpm sensor
+	measure_rpm++;
+	sbus_slot(4, swap(measure_rpm/6)); //rpm sensor
 	/* SBS-01V */
 	sbus_slot(5, 0x1000);
 	sbus_slot(6, 0xF0);
 	// temp
 	sbus_slot(1, 0x8282	);
+}
+
+void tim3_isr()
+{
+	if (++sbus_slot_index == 7)
+		TIM3_CR1 &= ~TIM_CR1_CEN;
+	sbus_send_slot(sbus_slot_base + sbus_slot_index);
+	TIM3_SR &= ~TIM_SR_UIF;
 }
 
 
@@ -134,14 +130,8 @@ void sbus_tick(void)
 {
 	unsigned char buf[25] = {0};
 
-	do {
-		buf[0] = usart_recv_blocking(SBUS_PORT);
-	}
+	do buf[0] = usart_recv_blocking(SBUS_PORT);
 	while (buf[0] != 0x0f);
-
-	#ifdef DEBUG
-	printf("got 0xf\r\n");
-	#endif
 
 	/** jitel
 	 * channel data is 25 bytes long,
@@ -151,15 +141,13 @@ void sbus_tick(void)
 	tim2_us(3000 - 120 + 50); // 24 bytes + jitter
 	for (int i = 1; i < 25; i++) {
 		// TBD
-		while ((USART_ISR(SBUS_PORT) & (USART_SR_RXNE | USART_SR_ORE |
-				     USART_SR_NE | USART_SR_FE |
-				     USART_SR_PE)) == 0 &&
-		       (TIM2_SR & TIM_SR_UIF) == 0);
-
+		//~ while ((USART_ISR(SBUS_PORT) & (USART_SR_RXNE | USART_SR_ORE |
+				     //~ USART_SR_NE | USART_SR_FE |
+				     //~ USART_SR_PE)) == 0 &&
+		while((TIM2_SR & TIM_SR_UIF) == 0);
 		buf[i] = usart_recv_blocking(SBUS_PORT);
 	}
 
-	led0_toggle;
 	switch (buf[24]) {
 	case 0x04: sbus_slot_base = 0; break;	// frame0
 	case 0x14: sbus_slot_base = 8; break;	// frame1

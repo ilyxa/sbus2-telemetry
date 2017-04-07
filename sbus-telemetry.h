@@ -114,6 +114,13 @@ void init_timer(void)
 
 }
 
+// swap Low-High Nibble
+static uint16_t swap(uint16_t a)
+{
+	return (a << 8) | (a >> 8);
+}
+
+
 void tim2_us(unsigned delay) // from jitel project
 {
 	TIM2_CR1 &= ~TIM_CR1_CEN;
@@ -122,9 +129,4 @@ void tim2_us(unsigned delay) // from jitel project
 	TIM2_CNT = 0;
 	TIM2_ARR = delay;
 	TIM2_CR1 |= TIM_CR1_CEN;
-}
-
-static uint16_t swap(uint16_t a)
-{
-	return (a << 8) | (a >> 8);
 }
